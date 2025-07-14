@@ -43,6 +43,27 @@ php artisan socket:make-action OrderUpdateAction
 
 This will create a new action class in `app/Socket/Actions/OrderUpdateAction.php`.
 
+### List Scanned Handlers
+
+View all discovered socket action handlers:
+
+```bash
+php artisan socket:list-handlers
+```
+
+Use additional options for more details:
+
+```bash
+# Show detailed information including middlewares and source
+php artisan socket:list-handlers --detailed
+
+# Show only auto-loaded handlers
+php artisan socket:list-handlers --only-autoload
+
+# Combine options
+php artisan socket:list-handlers --detailed --only-autoload
+```
+
 ### Handle Socket Messages
 
 Process incoming socket messages:

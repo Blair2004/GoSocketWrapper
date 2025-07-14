@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Event;
 use GoSocket\Wrapper\Console\Commands\MakeActionCommand;
 use GoSocket\Wrapper\Console\Commands\SocketHandlerCommand;
+use GoSocket\Wrapper\Console\Commands\ListHandlersCommand;
 use GoSocket\Wrapper\Listeners\EventListener;
 use GoSocket\Wrapper\Listeners\UserLoginListener;
 use GoSocket\Wrapper\Services\ActionDiscovery;
@@ -32,7 +33,25 @@ class GoSocketServiceProvider extends ServiceProvider
         
         // Register custom action handlers collection
         $this->app->singleton('gosocket.handlers', function () {
-            return collect();
+            $handlers = collect();
+            
+            // Auto-register package actions
+            $packageActionsPath = __DIR__ . '/Actions';
+            if (is_dir($packageActionsPath)) {
+                $actionFiles = glob($packageActionsPath . '/*.php');
+                foreach ($actionFiles as $file) {
+                    $className = 'GoSocket\\Wrapper\\Actions\\' . basename($file, '.php');
+                    if (class_exists($className)) {
+                        $reflection = new \ReflectionClass($className);
+                        // Skip abstract classes
+                        if (!$reflection->isAbstract()) {
+                            $handlers->push($className);
+                        }
+                    }
+                }
+            }
+            
+            return $handlers;
         });
     }
 
@@ -52,6 +71,7 @@ class GoSocketServiceProvider extends ServiceProvider
             $this->commands([
                 MakeActionCommand::class,
                 SocketHandlerCommand::class,
+                ListHandlersCommand::class,
             ]);
         }
 

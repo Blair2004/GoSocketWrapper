@@ -148,6 +148,11 @@ class ActionDiscovery
 
         $reflection = new \ReflectionClass($className);
         
+        // Skip abstract classes
+        if ($reflection->isAbstract()) {
+            return false;
+        }
+        
         // Check if it implements SocketAction interface
         if ($reflection->implementsInterface(SocketAction::class)) {
             // Check if it should be auto-loaded
