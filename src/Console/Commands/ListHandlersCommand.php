@@ -3,8 +3,8 @@
 namespace GoSocket\Wrapper\Console\Commands;
 
 use Illuminate\Console\Command;
-use GoSocket\Wrapper\Services\ActionDiscovery;
-use GoSocket\Wrapper\Contracts\SocketAction;
+use GoSocket\Wrapper\Services\HandlerDiscovery;
+use GoSocket\Wrapper\Contracts\SocketHandler;
 
 class ListHandlersCommand extends Command
 {
@@ -25,21 +25,21 @@ class ListHandlersCommand extends Command
     protected $description = 'List all scanned socket action handlers';
 
     /**
-     * The action discovery service
+     * The handler discovery service
      *
-     * @var ActionDiscovery
+     * @var HandlerDiscovery
      */
-    protected $actionDiscovery;
+    protected $handlerDiscovery;
 
     /**
      * Create a new command instance.
      *
-     * @param ActionDiscovery $actionDiscovery
+     * @param HandlerDiscovery $handlerDiscovery
      */
-    public function __construct(ActionDiscovery $actionDiscovery)
+    public function __construct(HandlerDiscovery $handlerDiscovery)
     {
         parent::__construct();
-        $this->actionDiscovery = $actionDiscovery;
+        $this->handlerDiscovery = $handlerDiscovery;
     }
 
     /**
@@ -50,7 +50,7 @@ class ListHandlersCommand extends Command
         $this->info('Scanning for socket action handlers...');
         $this->newLine();
 
-        $handlers = $this->actionDiscovery->discoverActions();
+        $handlers = $this->handlerDiscovery->discoverHandlers();
         
         if (empty($handlers)) {
             $this->warn('No socket action handlers found.');
@@ -83,7 +83,7 @@ class ListHandlersCommand extends Command
             try {
                 $instance = new $handlerClass();
                 
-                if (!$instance instanceof SocketAction) {
+                if (!$instance instanceof SocketHandler) {
                     continue;
                 }
 

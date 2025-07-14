@@ -25,6 +25,13 @@ SOCKET_TOKEN=your-gosocket-token
 SOCKET_SIGNINKEY=your-jwt-signing-key
 ```
 
+**Environment Variables Explained:**
+
+- `SOCKET_SERVER_URL`: WebSocket server URL for client connections
+- `SOCKET_HTTP_URL`: HTTP API URL for server-to-server communication
+- `SOCKET_TOKEN`: Authentication token for Laravel application to communicate with GoSocket server (server-to-server auth)
+- `SOCKET_SIGNINKEY`: JWT signing key used to create secure user session tokens for WebSocket connections (user authentication)
+
 4. Run the migration to add the socket_jwt column to your users table:
 
 ```bash
@@ -33,15 +40,34 @@ php artisan migrate
 
 ## Usage
 
-### Creating Socket Actions
+z### Creating Socket Handlers
 
-Generate a new socket action:
+Generate a new socket handler:
 
 ```bash
-php artisan socket:make-action OrderUpdateAction
+php artisan socket:make-handler OrderUpdateHandler
 ```
 
-This will create a new action class in `app/Socket/Actions/OrderUpdateAction.php`.
+This will create a new handler class in `app/Socket/Handlers/OrderUpdateHandler.php`.
+
+You can also specify a custom path relative to the project root:
+
+```bash
+# Create handler in custom path under app
+php artisan socket:make-handler OrderUpdateHandler --path=app/CustomSocket/Handlers
+
+# Create handler in modules structure
+php artisan socket:make-handler UserNotificationHandler --path=app/Modules/Notifications/Handlers
+
+# Create handler outside app directory
+php artisan socket:make-handler SystemHandler --path=packages/system/src/Handlers
+```
+
+The `--path` option allows you to organize handlers in different directories while maintaining the proper namespace structure. The path is relative to the project root directory.
+
+**Directory Creation:** If the specified path doesn't exist, it will be automatically created when generating the handler.
+
+**Note:** When using custom paths, make sure to add them to the `handlers_paths` array in `config/gosocket.php` so they can be discovered by the `socket:list-handlers` command and the handler discovery service.
 
 ### List Scanned Handlers
 

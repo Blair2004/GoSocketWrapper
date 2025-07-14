@@ -27,9 +27,19 @@ Added a new Artisan command `socket:list-handlers` to the GoSocket Laravel packa
    - Enhanced the 'gosocket.handlers' singleton to automatically register package actions
    - Auto-discovers actions in the package's Actions directory
 
-2. **`README.md`**
-   - Added documentation for the new command
-   - Included usage examples and options
+2. **`src/Console/Commands/MakeActionCommand.php`**
+   - Added `--path` option to specify custom action storage location
+   - Enhanced `getDefaultNamespace` to handle custom paths
+   - Maintains backward compatibility with default `app/Socket/Actions` location
+
+3. **`config/gosocket.php`**
+   - Updated documentation to explain how to add custom action paths
+   - Added examples for custom path configuration
+
+4. **`README.md`**
+   - Added documentation for the new command and its options
+   - Included usage examples for custom paths
+   - Added environment variables explanation
 
 ## Command Features
 

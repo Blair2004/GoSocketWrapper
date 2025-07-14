@@ -5,12 +5,12 @@ namespace GoSocket\Wrapper;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Event;
-use GoSocket\Wrapper\Console\Commands\MakeActionCommand;
+use GoSocket\Wrapper\Console\Commands\MakeHandlerCommand;
 use GoSocket\Wrapper\Console\Commands\SocketHandlerCommand;
 use GoSocket\Wrapper\Console\Commands\ListHandlersCommand;
 use GoSocket\Wrapper\Listeners\EventListener;
 use GoSocket\Wrapper\Listeners\UserLoginListener;
-use GoSocket\Wrapper\Services\ActionDiscovery;
+use GoSocket\Wrapper\Services\HandlerDiscovery;
 use GoSocket\Wrapper\Services\SocketHttpClient;
 
 class GoSocketServiceProvider extends ServiceProvider
@@ -27,20 +27,20 @@ class GoSocketServiceProvider extends ServiceProvider
             return new SocketHttpClient();
         });
         
-        $this->app->singleton(ActionDiscovery::class, function () {
-            return new ActionDiscovery();
+        $this->app->singleton(HandlerDiscovery::class, function () {
+            return new HandlerDiscovery();
         });
         
         // Register custom action handlers collection
         $this->app->singleton('gosocket.handlers', function () {
             $handlers = collect();
             
-            // Auto-register package actions
-            $packageActionsPath = __DIR__ . '/Actions';
-            if (is_dir($packageActionsPath)) {
-                $actionFiles = glob($packageActionsPath . '/*.php');
-                foreach ($actionFiles as $file) {
-                    $className = 'GoSocket\\Wrapper\\Actions\\' . basename($file, '.php');
+            // Auto-register package handlers
+            $packageHandlersPath = __DIR__ . '/Handlers';
+            if (is_dir($packageHandlersPath)) {
+                $handlerFiles = glob($packageHandlersPath . '/*.php');
+                foreach ($handlerFiles as $file) {
+                    $className = 'GoSocket\\Wrapper\\Handlers\\' . basename($file, '.php');
                     if (class_exists($className)) {
                         $reflection = new \ReflectionClass($className);
                         // Skip abstract classes
@@ -69,7 +69,7 @@ class GoSocketServiceProvider extends ServiceProvider
         // Register commands
         if ($this->app->runningInConsole()) {
             $this->commands([
-                MakeActionCommand::class,
+                MakeHandlerCommand::class,
                 SocketHandlerCommand::class,
                 ListHandlersCommand::class,
             ]);

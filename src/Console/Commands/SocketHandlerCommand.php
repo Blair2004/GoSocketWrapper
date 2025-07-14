@@ -4,7 +4,7 @@ namespace GoSocket\Wrapper\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Pipeline\Pipeline;
-use GoSocket\Wrapper\Services\ActionDiscovery;
+use GoSocket\Wrapper\Services\HandlerDiscovery;
 
 class SocketHandlerCommand extends Command
 {
@@ -23,21 +23,21 @@ class SocketHandlerCommand extends Command
     protected $description = 'Handle socket messages from GoSocket server';
 
     /**
-     * Action discovery service
+     * Handler discovery service
      *
-     * @var ActionDiscovery
+     * @var HandlerDiscovery
      */
-    protected $actionDiscovery;
+    protected $handlerDiscovery;
 
     /**
      * Create a new command instance.
      *
-     * @param ActionDiscovery $actionDiscovery
+     * @param HandlerDiscovery $handlerDiscovery
      */
-    public function __construct(ActionDiscovery $actionDiscovery)
+    public function __construct(HandlerDiscovery $handlerDiscovery)
     {
         parent::__construct();
-        $this->actionDiscovery = $actionDiscovery;
+        $this->handlerDiscovery = $handlerDiscovery;
     }
 
     /**
@@ -62,22 +62,21 @@ class SocketHandlerCommand extends Command
                 return 1;
             }
 
-            // Find the action handler
-            $actionClass = $this->actionDiscovery->findAction($payload['action']);
-
-            if (!$actionClass) {
-                $this->error(sprintf('No action found for: %s', $payload['action']));
+            // Find the action handler            $handlerClass = $this->handlerDiscovery->findHandler($payload['action']);
+            
+            if (!$handlerClass) {
+                $this->error(sprintf('No handler found for: %s', $payload['action']));
                 return 1;
             }
 
-            $action = new $actionClass();
+            $handler = new $handlerClass();
             
-            // Get action-specific middleware and merge with global ones
-            $actionMiddleware = method_exists($action, 'middlewares') ? $action->middlewares() : [];
+            // Get handler-specific middleware and merge with global ones
+            $handlerMiddleware = method_exists($handler, 'middlewares') ? $handler->middlewares() : [];
             $globalMiddleware = config('gosocket.middlewares', []);
             
             // Combine and deduplicate middleware
-            $middlewares = array_unique(array_merge($globalMiddleware, $actionMiddleware));
+            $middlewares = array_unique(array_merge($globalMiddleware, $handlerMiddleware));
 
             // Process payload through middleware pipeline
             $processedPayload = app(Pipeline::class)
@@ -87,14 +86,14 @@ class SocketHandlerCommand extends Command
                     return $payload;
                 });
 
-            // Execute the action
-            $action->handle($processedPayload);
+            // Execute the handler
+            $handler->handle($processedPayload);
 
-            $this->info('Socket action processed successfully.');
+            $this->info('Socket handler processed successfully.');
             return 0;
 
         } catch (\Exception $e) {
-            $this->error('Error processing socket action: ' . $e->getMessage());
+            $this->error('Error processing socket handler: ' . $e->getMessage());
             return 1;
         }
     }
