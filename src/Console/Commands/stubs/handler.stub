@@ -1,0 +1,57 @@
+<?php
+
+namespace {{ namespace }};
+
+use GoSocket\Wrapper\Contracts\SocketHandler;
+
+class {{ class }} implements SocketHandler
+{
+    /**
+     * Handle the socket action
+     *
+     * @param array $payload
+     * @return void
+     */
+    public function handle(array $payload): void
+    {
+        // Handle the socket action here
+        // $payload contains:
+        // - 'action': The action name
+        // - 'data': The message data
+        // - 'auth': User authentication info (id, email)
+    }
+
+    /**
+     * Get middleware for this handler
+     *
+     * @return array
+     */
+    public function middlewares(): array
+    {
+        return [
+            // Add middleware here, for example:
+            // 'auth', 'throttle:60,1'
+        ];
+    }
+
+    /**
+     * Get the name of the handler
+     * If not implemented, the class name will be used
+     *
+     * @return string|null
+     */
+    public function getName(): ?string
+    {
+        return null; // Return custom name or null to use class name
+    }
+
+    /**
+     * Determine if this handler should be auto-loaded
+     *
+     * @return bool
+     */
+    public function autoLoad(): bool
+    {
+        return true;
+    }
+}
