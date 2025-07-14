@@ -128,6 +128,294 @@ class OrderUpdated
 }
 ```
 
+## JavaScript Client
+
+The package includes a JavaScript client library (`gosocket-client.js`) for WebSocket communication with the GoSocket server. This client provides a simple API for connecting to the server, handling authentication, joining channels, and sending messages.
+
+### Installation
+
+The JavaScript client is automatically included when you use the `@socketClient` directive in your Blade templates. You can also manually include it:
+
+```html
+<script src="{{ asset('vendor/gosocket/js/gosocket-client.js') }}"></script>
+```
+
+### Basic Usage
+
+#### Manual Initialization
+
+```javascript
+// Create a new GoSocket client instance
+const socket = new GoSocketClient({
+    url: 'ws://localhost:8080',
+    token: 'your-jwt-token',
+    debug: true,
+    autoConnect: true
+});
+
+// Connect to the server
+socket.connect();
+```
+
+#### Configuration Options
+
+```javascript
+const socket = new GoSocketClient({
+    url: 'ws://localhost:8080',          // WebSocket server URL
+    token: 'your-jwt-token',             // JWT token for authentication
+    debug: false,                        // Enable debug logging
+    pingInterval: 30000,                 // Ping interval in milliseconds
+    reconnectAttempts: 5,                // Maximum reconnection attempts
+    reconnectDelay: 1000,                // Base delay between reconnection attempts
+    autoConnect: true                    // Auto-connect on instantiation
+});
+```
+
+#### Auto-Initialization
+
+You can also use the auto-initialization feature by setting up a global configuration:
+
+```javascript
+// Set global configuration
+window.goSocketConfig = {
+    url: 'ws://localhost:8080',
+    token: 'your-jwt-token',
+    debug: true,
+    autoConnect: true
+};
+
+// The client will automatically initialize and connect
+// Access via window.goSocket
+```
+
+### Event Handling
+
+The client provides event listeners for various socket events:
+
+```javascript
+// Connection events
+socket.on('connected', (data) => {
+    console.log('Connected to server');
+});
+
+socket.on('disconnected', (data) => {
+    console.log('Disconnected from server');
+});
+
+socket.on('error', (error) => {
+    console.error('Socket error:', error);
+});
+
+// Authentication events
+socket.on('authenticated', (data) => {
+    console.log('Authenticated successfully:', data);
+});
+
+// Message events
+socket.on('message', (data) => {
+    console.log('Received message:', data);
+});
+
+// Channel events
+socket.on('channel_joined', (data) => {
+    console.log('Joined channel:', data);
+});
+
+socket.on('channel_left', (data) => {
+    console.log('Left channel:', data);
+});
+
+// Ping/Pong events
+socket.on('pong', (data) => {
+    console.log('Received pong from server');
+});
+
+// Reconnection events
+socket.on('max_reconnect_attempts', () => {
+    console.log('Maximum reconnection attempts reached');
+});
+```
+
+### Authentication
+
+```javascript
+// Authenticate with a JWT token
+socket.authenticate('your-jwt-token');
+
+// Check authentication status
+const status = socket.getStatus();
+console.log('Authenticated:', status.authenticated);
+console.log('User ID:', status.userId);
+```
+
+### Channel Management
+
+```javascript
+// Join a public channel
+socket.joinChannel('public-channel');
+
+// Join a private channel
+socket.joinChannel('private-channel', true);
+
+// Leave a channel
+socket.leaveChannel('channel-name');
+```
+
+### Sending Messages
+
+```javascript
+// Send a message to a channel
+socket.sendMessage('channel-name', 'Hello, world!');
+
+// Send a message with additional data
+socket.sendMessage('channel-name', 'Order updated', {
+    order_id: 123,
+    status: 'shipped'
+});
+
+// Send custom data to the server
+socket.send({
+    action: 'custom_action',
+    data: {
+        custom_field: 'value'
+    }
+});
+```
+
+### Connection Management
+
+```javascript
+// Connect to the server
+socket.connect();
+
+// Disconnect from the server
+socket.disconnect();
+
+// Get connection status
+const status = socket.getStatus();
+console.log('Connection status:', status);
+```
+
+### Complete Example
+
+Here's a complete example showing how to use the GoSocket client in a Laravel Blade template:
+
+```blade
+@socketClient
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize socket client
+    const socket = new GoSocketClient({
+        url: '{{ config('gosocket.socket_server_url') }}',
+        token: '{{ auth()->user()->socket_jwt ?? '' }}',
+        debug: {{ config('app.debug') ? 'true' : 'false' }},
+        autoConnect: true
+    });
+
+    // Handle connection events
+    socket.on('connected', function() {
+        console.log('Connected to GoSocket server');
+        
+        // Join user-specific channel
+        socket.joinChannel('user.{{ auth()->id() }}', true);
+        
+        // Join public notifications channel
+        socket.joinChannel('notifications');
+    });
+
+    // Handle incoming messages
+    socket.on('message', function(data) {
+        console.log('Received message:', data);
+        
+        // Handle different message types
+        switch(data.event) {
+            case 'OrderUpdated':
+                handleOrderUpdate(data.data);
+                break;
+            case 'NotificationSent':
+                showNotification(data.data);
+                break;
+        }
+    });
+
+    // Handle disconnection
+    socket.on('disconnected', function() {
+        console.log('Disconnected from GoSocket server');
+    });
+
+    // Example functions
+    function handleOrderUpdate(data) {
+        // Update order status in UI
+        const orderElement = document.getElementById('order-' + data.order_id);
+        if (orderElement) {
+            orderElement.querySelector('.status').textContent = data.status;
+        }
+    }
+
+    function showNotification(data) {
+        // Show notification to user
+        const notification = document.createElement('div');
+        notification.className = 'alert alert-info';
+        notification.textContent = data.message;
+        document.body.appendChild(notification);
+        
+        // Auto-remove after 5 seconds
+        setTimeout(() => notification.remove(), 5000);
+    }
+
+    // Send message example
+    function sendOrderUpdate(orderId, status) {
+        socket.sendMessage('orders', 'Order status updated', {
+            order_id: orderId,
+            status: status,
+            timestamp: new Date().toISOString()
+        });
+    }
+});
+</script>
+```
+
+### Error Handling
+
+The client includes built-in error handling and automatic reconnection:
+
+```javascript
+socket.on('error', function(error) {
+    console.error('Socket error:', error);
+    
+    // Handle specific error types
+    if (error.type === 'authentication_failed') {
+        // Redirect to login or refresh token
+        window.location.href = '/login';
+    }
+});
+
+socket.on('max_reconnect_attempts', function() {
+    console.log('Could not reconnect to server');
+    
+    // Show user-friendly message
+    alert('Connection lost. Please refresh the page.');
+});
+```
+
+### Debugging
+
+Enable debug mode to see detailed logging:
+
+```javascript
+const socket = new GoSocketClient({
+    url: 'ws://localhost:8080',
+    debug: true  // Enable debug logging
+});
+
+// Debug logs will show:
+// - Connection attempts
+// - Messages sent and received
+// - Authentication status
+// - Reconnection attempts
+```
+
 ### Registering Custom Handlers
 
 You can register custom socket action handlers programmatically using a service provider. This is useful when you want to register handlers from different packages or modules.
