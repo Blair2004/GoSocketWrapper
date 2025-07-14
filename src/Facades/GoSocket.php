@@ -1,0 +1,24 @@
+<?php
+
+namespace GoSocket\Wrapper\Facades;
+
+use Illuminate\Support\Facades\Facade;
+
+/**
+ * @method static bool broadcast(array $data)
+ * @method static bool sendToChannel(string $channel, string $event, array $data = [], array $options = [])
+ * @method static bool sendToUser(int $userId, string $event, array $data = [])
+ * @method static bool sendGlobal(string $event, array $data = [])
+ */
+class GoSocket extends Facade
+{
+    /**
+     * Get the registered name of the component.
+     *
+     * @return string
+     */
+    protected static function getFacadeAccessor()
+    {
+        return 'gosocket.client';
+    }
+}

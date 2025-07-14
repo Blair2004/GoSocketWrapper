@@ -1,0 +1,44 @@
+{
+    "name": "gosocket/wrapper",
+    "description": "Laravel package for GoSocket integration",
+    "keywords": ["laravel", "socket", "websocket", "gosocket"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "GoSocket Team",
+            "email": "team@gosocket.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.4",
+        "illuminate/support": "^8.0|^9.0|^10.0|^11.0|^12.0",
+        "illuminate/console": "^8.0|^9.0|^10.0|^11.0|^12.0",
+        "illuminate/database": "^8.0|^9.0|^10.0|^11.0|^12.0",
+        "illuminate/events": "^8.0|^9.0|^10.0|^11.0|^12.0",
+        "illuminate/http": "^8.0|^9.0|^10.0|^11.0|^12.0",
+        "lcobucci/jwt": "^4.0|^5.0"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^6.0|^7.0|^8.0|^9.0",
+        "phpunit/phpunit": "^9.0|^10.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "GoSocket\\Wrapper\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "GoSocket\\Wrapper\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "GoSocket\\Wrapper\\GoSocketServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
