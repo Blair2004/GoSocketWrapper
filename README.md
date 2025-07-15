@@ -128,6 +128,136 @@ class OrderUpdated
 }
 ```
 
+#### Client-Specific Broadcasting
+
+You can broadcast events to specific clients, users, or groups:
+
+```php
+use GoSocket\Wrapper\Traits\InteractsWithSockets;
+
+class NotAllowedToConnectEvent
+{
+    use InteractsWithSockets;
+
+    public $reason;
+    public $userInfo;
+
+    public function __construct($reason = 'Access denied', $userInfo = [])
+    {
+        $this->reason = $reason;
+        $this->userInfo = $userInfo;
+    }
+
+    /**
+     * Dispatch to specific client connection
+     */
+    public static function dispatchToClient(string $clientId, string $reason = 'Access denied'): void
+    {
+        $event = new static($reason);
+        $event->toClient($clientId);
+        
+        event('socket.broadcast', [$event]);
+    }
+
+    /**
+     * Dispatch to specific user (all their connections)
+     */
+    public static function dispatchToUser(string $userId, string $reason = 'Access denied'): void
+    {
+        $event = new static($reason);
+        $event->toUser($userId);
+        
+        event('socket.broadcast', [$event]);
+    }
+
+    public function broadcastWith(): array
+    {
+        return [
+            'reason' => $this->reason,
+            'user_info' => $this->userInfo,
+            'action' => 'disconnect'
+        ];
+    }
+}
+```
+
+#### Broadcasting Methods
+
+The `InteractsWithSockets` trait provides several methods for targeting specific recipients:
+
+```php
+// Broadcast to specific client connection
+$event->toClient('client-id-123');
+
+// Broadcast to specific user (all their connections)
+$event->toUser('user-456');
+
+// Broadcast to all authenticated users
+$event->toAuthenticated();
+
+// Broadcast to all users except one
+$event->toUsersExcept('user-789');
+
+// Broadcast globally to all clients
+$event->toGlobal();
+```
+
+#### Using the GoSocket Facade
+
+You can also use the facade for easier broadcasting:
+
+```php
+use GoSocket\Wrapper\Facades\GoSocket;
+
+// Broadcast to specific client
+GoSocket::toClient('client-id-123', new OrderUpdated($order));
+
+// Broadcast to specific user
+GoSocket::toUser('user-456', new NotificationEvent($notification));
+
+// Broadcast to all authenticated users
+GoSocket::toAuthenticated(new SystemMaintenanceEvent());
+
+// Broadcast globally
+GoSocket::toGlobal(new ServerRestartEvent());
+```
+
+#### Practical Example: Authentication Failure
+
+```php
+// In your authentication middleware or controller
+use GoSocket\Wrapper\Examples\Events\NotAllowedToConnectEvent;
+
+public function handleWebSocketConnection(Request $request)
+{
+    $clientId = $request->get('client_id');
+    $token = $request->get('token');
+    
+    if (!$this->isValidToken($token)) {
+        // Send authentication failure to specific client
+        NotAllowedToConnectEvent::dispatchToClient(
+            $clientId, 
+            'Invalid or expired token'
+        );
+        
+        return response()->json(['error' => 'Authentication failed'], 401);
+    }
+    
+    // Continue with successful connection...
+}
+```
+
+#### Broadcasting Types
+
+The package supports these broadcast types:
+
+- **`client`** - Send to specific client connection
+- **`user`** - Send to all connections of a specific user
+- **`authenticated`** - Send to all authenticated users
+- **`user_except`** - Send to all authenticated users except one
+- **`global`** - Send to all connected clients
+- **`channel`** - Send to specific channel (default behavior)
+
 ## JavaScript Client
 
 The package includes a JavaScript client library (`gosocket-client.js`) for WebSocket communication with the GoSocket server. This client provides a simple API for connecting to the server, handling authentication, joining channels, and sending messages.

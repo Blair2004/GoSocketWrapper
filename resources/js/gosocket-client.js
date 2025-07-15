@@ -131,7 +131,7 @@ class GoSocketClient {
     authenticate(token) {
         this.send({
             action: 'authenticate',
-            data: { token: token }
+            token,
         });
     }
 
@@ -167,7 +167,6 @@ class GoSocketClient {
             data: {
                 channel: channel,
                 message: message,
-                ...data
             }
         });
     }

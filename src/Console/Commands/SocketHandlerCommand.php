@@ -62,7 +62,8 @@ class SocketHandlerCommand extends Command
                 return 1;
             }
 
-            // Find the action handler            $handlerClass = $this->handlerDiscovery->findHandler($payload['action']);
+            // Find the action handler            
+            $handlerClass = $this->handlerDiscovery->findHandler($payload['action']);
             
             if (!$handlerClass) {
                 $this->error(sprintf('No handler found for: %s', $payload['action']));

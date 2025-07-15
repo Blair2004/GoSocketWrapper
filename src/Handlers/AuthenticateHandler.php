@@ -2,6 +2,10 @@
 
 namespace GoSocket\Wrapper\Handlers;
 
+use App\Models\User;
+use GoSocket\Wrapper\Events\AuthenticationFailedEvent;
+use GoSocket\Wrapper\Events\AuthenticationSucceedEvent;
+
 class AuthenticateHandler extends BaseHandler
 {
     /**
@@ -15,14 +19,32 @@ class AuthenticateHandler extends BaseHandler
         // Authentication is typically handled by the socket server
         // This handler can be used for additional authentication logic
         
-        $token = $payload['data']['token'] ?? null;
-        
-        if (!$token) {
-            throw new \Exception('Token is required for authentication');
+        if ( ! isset( $payload[ 'auth' ] ) || empty( $payload[ 'auth' ][ 'user_id' ] ) ) {
+            AuthenticationFailedEvent::dispatch(
+                __( 'Authentication failed: No authentication data provided or missing "user_id".' ),
+                $payload
+            );
+
+            return;
         }
 
-        // Additional validation can be added here
-        // For example, checking if the JWT is valid in your application
+        $user = User::find( $payload[ 'auth' ][ 'user_id' ] );
+
+        if ( ! $user ) {
+            AuthenticationFailedEvent::dispatch(
+                __( 'Authentication failed: User not found.' ),
+                $payload
+            );
+            
+            return;
+        }
+
+        AuthenticationSucceedEvent::dispatch(
+            __( 'Authentication succeeded.' ), [
+                'payload' => $payload,
+                'user'    => $user,
+            ]
+        );
     }
 
     /**
@@ -32,7 +54,7 @@ class AuthenticateHandler extends BaseHandler
      */
     public function getName(): ?string
     {
-        return 'authenticate';
+        return 'client_authentication';
     }
 
     /**

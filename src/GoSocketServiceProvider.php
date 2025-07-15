@@ -78,17 +78,17 @@ class GoSocketServiceProvider extends ServiceProvider
         // Publish configuration
         $this->publishes([
             __DIR__ . '/../config/gosocket.php' => config_path('gosocket.php'),
-        ], 'config');
+        ], 'gosocket-config');
 
         // Publish assets
         $this->publishes([
             __DIR__ . '/../resources/js' => public_path('vendor/gosocket'),
-        ], 'assets');
+        ], 'gosocket-assets');
 
         // Publish views
         $this->publishes([
             __DIR__ . '/../resources/views' => resource_path('views/vendor/gosocket'),
-        ], 'views');
+        ], 'gosocket-views');
 
         // Register Blade directives
         $this->registerBladeDirectives();
