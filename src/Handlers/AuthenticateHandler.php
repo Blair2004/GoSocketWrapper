@@ -5,6 +5,7 @@ namespace GoSocket\Wrapper\Handlers;
 use App\Models\User;
 use GoSocket\Wrapper\Events\AuthenticationFailedEvent;
 use GoSocket\Wrapper\Events\AuthenticationSucceedEvent;
+use GoSocket\Wrapper\Facades\GoSocket;
 
 class AuthenticateHandler extends BaseHandler
 {
@@ -39,12 +40,10 @@ class AuthenticateHandler extends BaseHandler
             return;
         }
 
-        AuthenticationSucceedEvent::dispatch(
-            __( 'Authentication succeeded.' ), [
-                'payload' => $payload,
-                'user'    => $user,
-            ]
-        );
+        GoSocket::toClient( $payload[ 'auth' ][ 'id' ],  [
+            'payload' => $payload,
+            'user'    => $user,
+        ]);
     }
 
     /**

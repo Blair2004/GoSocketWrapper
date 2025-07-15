@@ -3,6 +3,7 @@
 namespace GoSocket\Wrapper\Services;
 
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Event;
 
 class SocketHttpClient
 {
@@ -97,5 +98,116 @@ class SocketHttpClient
             'data' => $data,
             'broadcast_to_everyone' => true,
         ]);
+    }
+
+    /**
+     * Send an event to a specific client
+     *
+     * @param string $clientId
+     * @param object $event
+     * @return bool
+     */
+    public function toClient(string $clientId, object $event): bool
+    {
+        if (!$this->hasInteractsWithSockets($event)) {
+            return false;
+        }
+
+        $event->toClient($clientId);
+        return $this->dispatchSocketEvent($event);
+    }
+
+    /**
+     * Send an event to a specific user (all their connections)
+     *
+     * @param string $userId
+     * @param object $event
+     * @return bool
+     */
+    public function toUser(string $userId, object $event): bool
+    {
+        if (!$this->hasInteractsWithSockets($event)) {
+            return false;
+        }
+
+        $event->toUser($userId);
+        return $this->dispatchSocketEvent($event);
+    }
+
+    /**
+     * Send an event to all authenticated users
+     *
+     * @param object $event
+     * @return bool
+     */
+    public function toAuthenticated(object $event): bool
+    {
+        if (!$this->hasInteractsWithSockets($event)) {
+            return false;
+        }
+
+        $event->toAuthenticated();
+        return $this->dispatchSocketEvent($event);
+    }
+
+    /**
+     * Send an event to all users except one
+     *
+     * @param string $excludeUserId
+     * @param object $event
+     * @return bool
+     */
+    public function toUsersExcept(string $excludeUserId, object $event): bool
+    {
+        if (!$this->hasInteractsWithSockets($event)) {
+            return false;
+        }
+
+        $event->toUsersExcept($excludeUserId);
+        return $this->dispatchSocketEvent($event);
+    }
+
+    /**
+     * Send an event globally to all clients
+     *
+     * @param object $event
+     * @return bool
+     */
+    public function toGlobal(object $event): bool
+    {
+        if (!$this->hasInteractsWithSockets($event)) {
+            return false;
+        }
+
+        $event->toGlobal();
+        return $this->dispatchSocketEvent($event);
+    }
+
+    /**
+     * Check if event uses InteractsWithSockets trait
+     *
+     * @param object $event
+     * @return bool
+     */
+    protected function hasInteractsWithSockets(object $event): bool
+    {
+        $traits = class_uses_recursive(get_class($event));
+        return in_array(\GoSocket\Wrapper\Traits\InteractsWithSockets::class, $traits);
+    }
+
+    /**
+     * Dispatch the socket event
+     *
+     * @param object $event
+     * @return bool
+     */
+    protected function dispatchSocketEvent(object $event): bool
+    {
+        try {
+            Event::dispatch('socket.broadcast', [$event]);
+            return true;
+        } catch (\Exception $e) {
+            return false;
+        }
     }
 }

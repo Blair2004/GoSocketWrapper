@@ -209,18 +209,27 @@ You can also use the facade for easier broadcasting:
 ```php
 use GoSocket\Wrapper\Facades\GoSocket;
 
-// Broadcast to specific client
-GoSocket::toClient('client-id-123', new OrderUpdated($order));
+// Broadcast to specific client (returns bool indicating success)
+$success = GoSocket::toClient('client-id-123', new OrderUpdated($order));
 
-// Broadcast to specific user
-GoSocket::toUser('user-456', new NotificationEvent($notification));
+// Broadcast to specific user (returns bool indicating success)
+$success = GoSocket::toUser('user-456', new NotificationEvent($notification));
 
 // Broadcast to all authenticated users
-GoSocket::toAuthenticated(new SystemMaintenanceEvent());
+$success = GoSocket::toAuthenticated(new SystemMaintenanceEvent());
 
 // Broadcast globally
-GoSocket::toGlobal(new ServerRestartEvent());
+$success = GoSocket::toGlobal(new ServerRestartEvent());
+
+// Check if broadcast was successful
+if ($success) {
+    Log::info('Event broadcasted successfully');
+} else {
+    Log::error('Failed to broadcast event');
+}
 ```
+
+**Note:** The facade methods return `bool` indicating whether the broadcast was successful. The underlying event will be dispatched through the `socket.broadcast` event system.
 
 #### Practical Example: Authentication Failure
 
