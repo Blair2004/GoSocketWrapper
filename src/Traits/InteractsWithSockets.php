@@ -159,4 +159,99 @@ trait InteractsWithSockets
     {
         return [];
     }
+
+    /**
+     * Dispatch this event to a specific client
+     *
+     * @param string $clientId
+     * @param mixed ...$args Constructor arguments for the event
+     * @return void
+     */
+    public static function dispatchToClient(string $clientId, ...$args): void
+    {
+        $event = new static(...$args);
+        $event->toClient($clientId);
+        
+        // Dispatch as a regular Laravel event so it appears in Laravel's event system
+        // The EventListener will pick this up and handle the socket broadcasting
+        \Illuminate\Support\Facades\Event::dispatch($event);
+    }
+
+    /**
+     * Dispatch this event to a specific user (all their connections)
+     *
+     * @param string $userId
+     * @param mixed ...$args Constructor arguments for the event
+     * @return void
+     */
+    public static function dispatchToUser(string $userId, ...$args): void
+    {
+        $event = new static(...$args);
+        $event->toUser($userId);
+        
+        // Dispatch as a regular Laravel event so it appears in Laravel's event system
+        \Illuminate\Support\Facades\Event::dispatch($event);
+    }
+
+    /**
+     * Dispatch this event to all authenticated users
+     *
+     * @param mixed ...$args Constructor arguments for the event
+     * @return void
+     */
+    public static function dispatchToAuthenticated(...$args): void
+    {
+        $event = new static(...$args);
+        $event->toAuthenticated();
+        
+        // Dispatch as a regular Laravel event so it appears in Laravel's event system
+        \Illuminate\Support\Facades\Event::dispatch($event);
+    }
+
+    /**
+     * Dispatch this event to all users except one
+     *
+     * @param string $excludeUserId
+     * @param mixed ...$args Constructor arguments for the event
+     * @return void
+     */
+    public static function dispatchToUsersExcept(string $excludeUserId, ...$args): void
+    {
+        $event = new static(...$args);
+        $event->toUsersExcept($excludeUserId);
+        
+        // Dispatch as a regular Laravel event so it appears in Laravel's event system
+        \Illuminate\Support\Facades\Event::dispatch($event);
+    }
+
+    /**
+     * Dispatch this event globally to all clients
+     *
+     * @param mixed ...$args Constructor arguments for the event
+     * @return void
+     */
+    public static function dispatchToGlobal(...$args): void
+    {
+        $event = new static(...$args);
+        $event->toGlobal();
+        
+        // Dispatch as a regular Laravel event so it appears in Laravel's event system
+        \Illuminate\Support\Facades\Event::dispatch($event);
+    }
+
+    /**
+     * Dispatch this event to a specific channel
+     *
+     * @param string $channel
+     * @param mixed ...$args Constructor arguments for the event
+     * @return void
+     */
+    public static function dispatchToChannel(string $channel, ...$args): void
+    {
+        $event = new static(...$args);
+        // Channel-based is the default behavior, so we don't need to set broadcast type
+        
+        // Dispatch as a regular Laravel event so it appears in Laravel's event system
+        \Illuminate\Support\Facades\Event::dispatch($event);
+    }
 }

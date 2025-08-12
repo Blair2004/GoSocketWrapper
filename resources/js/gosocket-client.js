@@ -7,7 +7,7 @@ class GoSocketClient {
         this.options = {
             url: options.url || 'ws://localhost:8080',
             debug: options.debug || false,
-            pingInterval: options.pingInterval || 30000,
+            pingInterval: options.pingInterval || 5000, // Reduced from 30000 to 5000 (5 seconds)
             reconnectAttempts: options.reconnectAttempts || 5,
             reconnectDelay: options.reconnectDelay || 1000,
             token: options.token || null,
@@ -50,7 +50,6 @@ class GoSocketClient {
             this.log('Connected to GoSocket server');
             
             this.startPing();
-            this.emit('connected', event);
             
             // Auto-authenticate if token is provided
             if (this.options.token) {
@@ -89,38 +88,38 @@ class GoSocketClient {
     /**
      * Handle incoming messages
      */
-    handleMessage(data) {
-        this.log('Received:', data);
+    handleMessage(socket) {
+        this.log('Received:', socket);
 
-        switch (data.type) {
+        switch (socket.event) {
             case 'pong':
-                this.emit('pong', data);
+                this.emit('pong', socket);
                 break;
             
             case 'authenticated':
                 this.authenticated = true;
-                this.userId = data.user_id;
-                this.emit('authenticated', data);
+                this.userId = socket.user_id;
+                this.emit('authenticated', socket);
                 break;
             
             case 'error':
-                this.emit('error', data);
+                this.emit('error', socket);
                 break;
             
             case 'message':
-                this.emit('message', data);
+                this.emit('message', socket);
                 break;
             
             case 'channel_joined':
-                this.emit('channel_joined', data);
+                this.emit('channel_joined', socket);
                 break;
             
             case 'channel_left':
-                this.emit('channel_left', data);
+                this.emit('channel_left', socket);
                 break;
             
             default:
-                this.emit('data', data);
+                this.emit( socket.event, socket.data );
                 break;
         }
     }
@@ -138,13 +137,12 @@ class GoSocketClient {
     /**
      * Join a channel
      */
-    joinChannel(channel, isPrivate = false) {
+    joinChannel(channel, privateStatus = false, data = {} ) {
         this.send({
             action: 'join_channel',
-            data: { 
-                channel: channel,
-                private: isPrivate
-            }
+            channel,
+            private: privateStatus,
+            data
         });
     }
 
@@ -154,7 +152,7 @@ class GoSocketClient {
     leaveChannel(channel) {
         this.send({
             action: 'leave_channel',
-            data: { channel: channel }
+            channel,
         });
     }
 
@@ -164,9 +162,9 @@ class GoSocketClient {
     sendMessage(channel, message, data = {}) {
         this.send({
             action: 'send_message',
+            channel,
             data: {
-                channel: channel,
-                message: message,
+                message,
             }
         });
     }

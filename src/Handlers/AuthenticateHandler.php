@@ -22,8 +22,9 @@ class AuthenticateHandler extends BaseHandler
         
         if ( ! isset( $payload[ 'auth' ] ) || empty( $payload[ 'auth' ][ 'user_id' ] ) ) {
             AuthenticationFailedEvent::dispatch(
-                __( 'Authentication failed: No authentication data provided or missing "user_id".' ),
-                $payload
+                $payload[ 'auth' ][ 'id' ], [
+                    'error' => 'Authentication failed: User ID is missing or empty.'
+                ]
             );
 
             return;
@@ -32,18 +33,19 @@ class AuthenticateHandler extends BaseHandler
         $user = User::find( $payload[ 'auth' ][ 'user_id' ] );
 
         if ( ! $user ) {
-            AuthenticationFailedEvent::dispatch(
-                __( 'Authentication failed: User not found.' ),
-                $payload
+            AuthenticationFailedEvent::dispatchToClient(
+                $payload[ 'auth' ][ 'id' ], [
+                    'error' => 'Authentication failed: User not found.'
+                ]
             );
             
             return;
         }
 
-        GoSocket::toClient( $payload[ 'auth' ][ 'id' ],  [
-            'payload' => $payload,
-            'user'    => $user,
-        ]);
+        AuthenticationSucceedEvent::dispatchToClient(
+            $payload[ 'auth' ][ 'id' ],
+            $user->toArray()
+        );
     }
 
     /**

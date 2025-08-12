@@ -130,56 +130,69 @@ class OrderUpdated
 
 #### Client-Specific Broadcasting
 
-You can broadcast events to specific clients, users, or groups:
+Any event using the `InteractsWithSockets` trait automatically gets powerful broadcasting methods:
 
 ```php
 use GoSocket\Wrapper\Traits\InteractsWithSockets;
 
-class NotAllowedToConnectEvent
+class OrderUpdatedEvent
 {
     use InteractsWithSockets;
 
-    public $reason;
-    public $userInfo;
+    public $order;
+    public $message;
 
-    public function __construct($reason = 'Access denied', $userInfo = [])
+    public function __construct($order, $message = 'Order updated')
     {
-        $this->reason = $reason;
-        $this->userInfo = $userInfo;
+        $this->order = $order;
+        $this->message = $message;
     }
 
-    /**
-     * Dispatch to specific client connection
-     */
-    public static function dispatchToClient(string $clientId, string $reason = 'Access denied'): void
+    public function broadcastAs(): string
     {
-        $event = new static($reason);
-        $event->toClient($clientId);
-        
-        event('socket.broadcast', [$event]);
-    }
-
-    /**
-     * Dispatch to specific user (all their connections)
-     */
-    public static function dispatchToUser(string $userId, string $reason = 'Access denied'): void
-    {
-        $event = new static($reason);
-        $event->toUser($userId);
-        
-        event('socket.broadcast', [$event]);
+        return 'order_updated';
     }
 
     public function broadcastWith(): array
     {
         return [
-            'reason' => $this->reason,
-            'user_info' => $this->userInfo,
-            'action' => 'disconnect'
+            'order' => $this->order,
+            'message' => $this->message,
+            'timestamp' => date('c')
         ];
     }
 }
 ```
+
+#### Available Broadcasting Methods
+
+Every event using `InteractsWithSockets` automatically gets these static methods:
+
+```php
+// Broadcast to specific client connection
+OrderUpdatedEvent::dispatchToClient('client-123', $order, 'Your order updated');
+
+// Broadcast to specific user (all their connections)
+OrderUpdatedEvent::dispatchToUser('user-456', $order);
+
+// Broadcast to all authenticated users
+OrderUpdatedEvent::dispatchToAuthenticated($order, 'Order #123 updated');
+
+// Broadcast to all users except one
+OrderUpdatedEvent::dispatchToUsersExcept('user-789', $order);
+
+// Broadcast globally to all clients
+OrderUpdatedEvent::dispatchToGlobal($order, 'New order received');
+
+// Broadcast to a specific channel
+OrderUpdatedEvent::dispatchToChannel('orders', $order);
+```
+
+**Key Features:**
+- **Automatic**: No need to add methods to each event class
+- **Flexible Parameters**: Pass any constructor arguments after the target ID
+- **Laravel Integration**: Events appear in Laravel's event system and can have listeners
+- **Consistent API**: Same method signatures across all events
 
 #### Broadcasting Methods
 
@@ -234,9 +247,36 @@ if ($success) {
 #### Practical Example: Authentication Failure
 
 ```php
-// In your authentication middleware or controller
-use GoSocket\Wrapper\Examples\Events\NotAllowedToConnectEvent;
+// Create any event class
+class AuthenticationFailedEvent
+{
+    use InteractsWithSockets;
 
+    public $reason;
+    public $userInfo;
+
+    public function __construct($reason = 'Authentication failed', $userInfo = [])
+    {
+        $this->reason = $reason;
+        $this->userInfo = $userInfo;
+    }
+
+    public function broadcastAs(): string
+    {
+        return 'authentication_failed';
+    }
+
+    public function broadcastWith(): array
+    {
+        return [
+            'reason' => $this->reason,
+            'user_info' => $this->userInfo,
+            'action' => 'disconnect'
+        ];
+    }
+}
+
+// Usage in your authentication middleware or controller
 public function handleWebSocketConnection(Request $request)
 {
     $clientId = $request->get('client_id');
@@ -244,7 +284,7 @@ public function handleWebSocketConnection(Request $request)
     
     if (!$this->isValidToken($token)) {
         // Send authentication failure to specific client
-        NotAllowedToConnectEvent::dispatchToClient(
+        AuthenticationFailedEvent::dispatchToClient(
             $clientId, 
             'Invalid or expired token'
         );
@@ -252,8 +292,28 @@ public function handleWebSocketConnection(Request $request)
         return response()->json(['error' => 'Authentication failed'], 401);
     }
     
-    // Continue with successful connection...
+    // Send success to client
+    AuthenticationSuccessEvent::dispatchToClient($clientId, 'Welcome!', $user->toArray());
 }
+```
+
+#### Real-world Usage Examples
+
+```php
+// E-commerce order updates
+OrderShippedEvent::dispatchToUser($order->user_id, $order);
+
+// System notifications
+MaintenanceEvent::dispatchToAuthenticated('System maintenance in 5 minutes');
+
+// User activity broadcasts
+UserOnlineEvent::dispatchToUsersExcept($user->id, $user, 'came online');
+
+// Global announcements
+SystemAnnouncementEvent::dispatchToGlobal('New feature released!');
+
+// Chat room messages
+ChatMessageEvent::dispatchToChannel("room-{$roomId}", $message, $user);
 ```
 
 #### Broadcasting Types
