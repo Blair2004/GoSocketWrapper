@@ -26,5 +26,6 @@ abstract class TestCase extends BaseTestCase
         $app['config']->set('gosocket.socket_server_url', 'ws://localhost:8080');
         $app['config']->set('gosocket.socket_http_url', 'http://localhost:8081');
         $app['config']->set('gosocket.socket_token', 'test-token');
+        $app['config']->set('gosocket.socket_signing_key', 'test-jwt-key');
     }
 }

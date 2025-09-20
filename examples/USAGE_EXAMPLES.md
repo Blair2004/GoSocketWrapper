@@ -29,8 +29,8 @@ Add these environment variables to your `.env` file:
 ```env
 SOCKET_SERVER_URL=ws://localhost:8080
 SOCKET_HTTP_URL=http://localhost:8081
-SOCKET_TOKEN=your-gosocket-token
-SOCKET_SIGNINKEY=your-jwt-signing-key
+SOCKET_SERVER_TOKEN=your-gosocket-token
+SOCKET_JWT_TOKEN=your-jwt-signing-key
 ```
 
 ## Creating Socket Actions

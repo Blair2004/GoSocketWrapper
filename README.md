@@ -21,16 +21,16 @@ php artisan vendor:publish --provider="GoSocket\Wrapper\GoSocketServiceProvider"
 ```env
 SOCKET_SERVER_URL=ws://localhost:8080
 SOCKET_HTTP_URL=http://localhost:8081
-SOCKET_TOKEN=your-gosocket-token
-SOCKET_SIGNINKEY=your-jwt-signing-key
+SOCKET_SERVER_TOKEN=your-gosocket-token
+SOCKET_JWT_TOKEN=your-jwt-signing-key
 ```
 
 **Environment Variables Explained:**
 
 - `SOCKET_SERVER_URL`: WebSocket server URL for client connections
 - `SOCKET_HTTP_URL`: HTTP API URL for server-to-server communication
-- `SOCKET_TOKEN`: Authentication token for Laravel application to communicate with GoSocket server (server-to-server auth)
-- `SOCKET_SIGNINKEY`: JWT signing key used to create secure user session tokens for WebSocket connections (user authentication)
+- `SOCKET_SERVER_TOKEN`: Authentication token for Laravel application to communicate with GoSocket server (server-to-server auth)
+- `SOCKET_JWT_TOKEN`: JWT signing key used to create secure user session tokens for WebSocket connections (user authentication)
 
 4. Run the migration to add the socket_jwt column to your users table:
 
