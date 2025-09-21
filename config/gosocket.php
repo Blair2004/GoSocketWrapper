@@ -12,7 +12,7 @@ return [
     'socket_server_url' => env('SOCKET_SERVER_URL', 'ws://localhost:8080'),
     'socket_http_url' => env('SOCKET_HTTP_URL', 'http://localhost:8081'),
     'socket_token' => env('SOCKET_SERVER_TOKEN', null),
-    'socket_signing_key' => env('SOCKET_JWT_TOKEN', null),
+    'socket_signing_key' => env('SOCKET_JWT_SECRET', null),
 
     /*
     |--------------------------------------------------------------------------

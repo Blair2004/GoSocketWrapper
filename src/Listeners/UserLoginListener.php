@@ -3,6 +3,8 @@
 namespace GoSocket\Wrapper\Listeners;
 
 use Illuminate\Auth\Events\Login;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
 use Lcobucci\JWT\Encoding\ChainedFormatter;
 use Lcobucci\JWT\Encoding\JoseEncoder;
 use Lcobucci\JWT\Signer\Key\InMemory;
@@ -31,7 +33,7 @@ class UserLoginListener
     protected function generateSocketJWT($user): void
     {
         try {
-            $signingKey = config('gosocket.socket_signing_key');
+            $signingKey = \config('gosocket.socket_signing_key');
             
             if (!$signingKey) {
                 return;
@@ -42,9 +44,10 @@ class UserLoginListener
             $key = InMemory::plainText($signingKey);
 
             $token = $builder
-                ->issuedBy(config('app.url', 'localhost'))
-                ->permittedFor(config('app.url', 'localhost'))
-                ->expiresAt(now()->addWeek()->toDateTimeImmutable())
+                ->issuedBy(\config('app.url', 'localhost'))
+                ->permittedFor(\config('app.url', 'localhost'))
+                ->issuedAt(Carbon::now()->toDateTimeImmutable())
+                ->expiresAt(Carbon::now()->addWeek()->toDateTimeImmutable())
                 ->withClaim('user_id', $user->id)
                 ->withClaim('username', $user->username ?? $user->name ?? '')
                 ->withClaim('email', $user->email)
@@ -55,7 +58,7 @@ class UserLoginListener
             
         } catch (\Exception $e) {
             // Log error but don't break login process
-            logger()->error('Failed to generate socket JWT', [
+            Log::error('Failed to generate socket JWT', [
                 'user_id' => $user->id ?? null,
                 'error' => $e->getMessage(),
             ]);
