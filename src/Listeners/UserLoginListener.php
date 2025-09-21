@@ -46,7 +46,6 @@ class UserLoginListener
             $token = $builder
                 ->issuedBy(config('app.url', 'localhost'))
                 ->permittedFor(config('app.url', 'localhost'))
-                ->issuedAt(Carbon::now()->toDateTimeImmutable())
                 ->expiresAt(Carbon::now()->addWeek()->toDateTimeImmutable())
                 ->withClaim('user_id', $user->id)
                 ->withClaim('username', $user->username ?? $user->name ?? '')
