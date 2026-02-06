@@ -2,6 +2,7 @@
 
 namespace GoSocket\Wrapper\Console\Commands;
 
+use Exception;
 use Illuminate\Console\Command;
 use Illuminate\Pipeline\Pipeline;
 use GoSocket\Wrapper\Services\HandlerDiscovery;
@@ -54,49 +55,56 @@ class SocketHandlerCommand extends Command
             return 1;
         }
 
-        try {
-            $payload = json_decode(file_get_contents($payloadPath), true);
+        $payload = json_decode(file_get_contents($payloadPath), true);
 
-            if (!is_array($payload) || !isset($payload['action'], $payload['data'], $payload['auth'])) {
-                $this->error('Invalid JSON payload structure.');
-                return 1;
-            }
-
-            // Find the action handler            
-            $handlerClass = $this->handlerDiscovery->findHandler($payload['action']);
-            
-            if (!$handlerClass) {
-                $this->error(sprintf('No handler found for: %s', $payload['action']));
-                return 1;
-            }
-
-            $handler = new $handlerClass();
-            
-            // Get handler-specific middleware and merge with global ones
-            $handlerMiddleware = method_exists($handler, 'middlewares') ? $handler->middlewares() : [];
-            $globalMiddleware = config('gosocket.middlewares', []);
-            
-            // Combine and deduplicate middleware
-            $middlewares = array_unique(array_merge($globalMiddleware, $handlerMiddleware));
-
-            // Process payload through middleware pipeline
-            $processedPayload = app(Pipeline::class)
-                ->send($payload)
-                ->through($this->resolveMiddlewares($middlewares))
-                ->then(function ($payload) {
-                    return $payload;
-                });
-
-            // Execute the handler
-            $handler->handle($processedPayload);
-
-            $this->info('Socket handler processed successfully.');
-            return 0;
-
-        } catch (\Exception $e) {
-            $this->error('Error processing socket handler: ' . $e->getMessage());
+        if (!is_array($payload) || !isset($payload['action'], $payload['data'], $payload['auth'])) {
+            $this->error('Invalid JSON payload structure.');
             return 1;
         }
+
+        // Find the action handler            
+        $classes = $this->handlerDiscovery->findHandlers($payload['action']);
+        
+        if (!$classes || $classes->count() === 0) {
+            $this->error(sprintf('No handler found for: %s', $payload['action']));
+            return 1;
+        }
+
+        $classes->map( function( $handlerClass ) use ( $payload ) {
+            $this->info( "Processing handler: " . $handlerClass );
+            try {
+                $handler = new $handlerClass();
+                
+                // Get handler-specific middleware and merge with global ones
+                $handlerMiddleware = method_exists($handler, 'middlewares') ? $handler->middlewares() : [];
+                $globalMiddleware = config('gosocket.middlewares', []);
+                
+                // Combine and deduplicate middleware
+                $middlewares = array_unique(array_merge($globalMiddleware, $handlerMiddleware));
+    
+                // Process payload through middleware pipeline
+                $processedPayload = app(Pipeline::class)
+                    ->send($payload)
+                    ->through($this->resolveMiddlewares($middlewares))
+                    ->then(function ($payload) {
+                        return $payload;
+                    });
+
+    
+                // Execute the handler
+                $handler->handle($processedPayload);
+
+                return [
+                    'success' => true,
+                    'message' => sprintf('Handler %s executed successfully.', $handlerClass)
+                ];
+            } catch( Exception $e ) {
+                return [
+                    'success' => false,
+                    'message' => 'Handler execution failed: ' . $e->getMessage()
+                ];
+            }
+        });
     }
 
     /**

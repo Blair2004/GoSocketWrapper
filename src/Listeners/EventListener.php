@@ -2,6 +2,7 @@
 
 namespace GoSocket\Wrapper\Listeners;
 
+use Exception;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use GoSocket\Wrapper\Traits\InteractsWithSockets;
@@ -91,11 +92,7 @@ class EventListener
             ])->post($socketUrl . $endpoint, $payload);
 
         } catch (\Exception $e) {
-            // Log error but don't break the application
-            Log::error('Failed to broadcast event to socket server', [
-                'event' => get_class($event),
-                'error' => $e->getMessage(),
-            ]);
+            throw new Exception( 'Error broadcasting to socket: ' . $e->getMessage() );
         }
     }
 

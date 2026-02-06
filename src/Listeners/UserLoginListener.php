@@ -2,6 +2,7 @@
 
 namespace GoSocket\Wrapper\Listeners;
 
+use Exception;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
@@ -56,11 +57,7 @@ class UserLoginListener
             $user->save();
             
         } catch (\Exception $e) {
-            // Log error but don't break login process
-            Log::error('Failed to generate socket JWT', [
-                'user_id' => $user->id ?? null,
-                'error' => $e->getMessage(),
-            ]);
+            throw new Exception( 'Error generating socket JWT: ' . $e->getMessage() );
         }
     }
 }

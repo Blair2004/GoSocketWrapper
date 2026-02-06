@@ -3,52 +3,47 @@
 namespace GoSocket\Wrapper\Services;
 
 use GoSocket\Wrapper\Contracts\SocketHandler;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
 
 class HandlerDiscovery
 {
     /**
-     * Find a socket handler by name
+     * Find all handlers matching the given name
      *
      * @param string $handlerName
-     * @return string|null
+     * @return Collection
      */
-    public function findHandler(string $handlerName): ?string
+    public function findHandlers(string $handlerName): Collection
     {
         $handlers = $this->discoverHandlers();
 
-        foreach ($handlers as $handlerClass) {
-            if (!class_exists($handlerClass)) {
-                continue;
+        return collect( $handlers )->filter( function( $handlerClass ) use ( $handlerName ) {
+            if ( !class_exists( $handlerClass ) ) {
+                return false;
             }
 
-            // Check if class name matches
-            if ($handlerName === $handlerClass) {
-                return $handlerClass;
+            if ( $handlerName === $handlerClass ) {
+                return true;
             }
 
-            // Check if the handler has a custom name
             try {
                 $instance = new $handlerClass();
                 
-                if ($instance instanceof SocketHandler && method_exists($instance, 'getName')) {
+                if ( $instance instanceof SocketHandler && method_exists( $instance, 'getName' ) ) {
                     $customName = $instance->getName();
-                    if ($customName && $handlerName === $customName) {
-                        return $handlerClass;
+                    if ( $customName && $handlerName === $customName ) {
+                        return true;
                     }
                 }
 
-                // Check if class basename matches
-                if ($handlerName === class_basename($handlerClass)) {
-                    return $handlerClass;
+                if ( $handlerName === class_basename( $handlerClass ) ) {
+                    return true;
                 }
-            } catch (\Exception $e) {
-                // Skip if we can't instantiate the class
-                continue;
+            } catch ( \Exception $e ) {
+                return false;
             }
-        }
-
-        return null;
+        });
     }
 
     /**
