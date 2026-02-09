@@ -13,6 +13,8 @@ return [
     'socket_http_url' => env('SOCKET_HTTP_URL', 'http://localhost:8081'),
     'http_token' => env('HTTP_TOKEN', null),
     'jwt_secret' => env('JWT_SECRET', null),
+    'jwt_app_id' => env('JWT_APP_ID', 'go-socket'),
+    'jwt_app_url' => env('JWT_APP_URL', 'http://localhost'),
 
     /*
     |--------------------------------------------------------------------------

@@ -45,8 +45,8 @@ class UserLoginListener
             $key = InMemory::plainText($signingKey);
 
             $token = $builder
-                ->issuedBy(config('app.url', 'localhost'))
-                ->permittedFor(config('app.url', 'localhost'))
+                ->issuedBy(config('gosocket.jwt_app_id', 'go-socket'))
+                ->permittedFor(config('gosocket.jwt_app_url', 'http://localhost'))
                 ->expiresAt(Carbon::now()->addWeek()->toDateTimeImmutable())
                 ->withClaim('user_id', $user->id)
                 ->withClaim('username', $user->username ?? $user->name ?? '')
