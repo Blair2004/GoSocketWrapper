@@ -24,7 +24,7 @@ class SocketHttpClient
     public function __construct()
     {
         $this->baseUrl = config('gosocket.socket_http_url');
-        $this->token = config('gosocket.socket_token');
+        $this->token = config('gosocket.http_token');
     }
 
     /**

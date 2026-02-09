@@ -68,7 +68,7 @@ class EventListener
     {
         try {
             $socketUrl = config('gosocket.socket_http_url');
-            $token = config('gosocket.socket_token');
+            $token = config('gosocket.http_token');
             $endpoint = config('gosocket.broadcasting.endpoint', '/api/broadcast');
 
             if (!$socketUrl || !$token) {

@@ -34,7 +34,7 @@ class UserLoginListener
     protected function generateSocketJWT($user): void
     {
         try {
-            $signingKey = config('gosocket.socket_signing_key');
+            $signingKey = config('gosocket.jwt_secret');
             
             if (!$signingKey) {
                 return;
